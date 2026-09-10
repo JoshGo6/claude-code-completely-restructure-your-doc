@@ -24,7 +24,7 @@ claude-code-completely-restructure-your-doc/
 
 ## Copy one directory to install it
 
-Move the `doc-restructure` folder into place, leaving the README and the license behind:
+Copy the `doc-restructure` folder into place, leaving the README and the license behind:
 
 ```bash
 cp -r doc-restructure ~/.claude/skills/

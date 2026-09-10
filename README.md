@@ -9,7 +9,7 @@ One kind of material does come out rather than move. An example that states an o
 Everything the skill needs sits inside `doc-restructure/`, and the two files above it are packaging:
 
 ```text
-claude-code-doc-restructure/
+claude-code-completely-restructure-your-doc/
 ├── README.md
 ├── LICENSE
 └── doc-restructure/
@@ -24,7 +24,7 @@ claude-code-doc-restructure/
 
 ## Copy one directory to install it
 
-Install the skill for every project with one copy, leaving the README and the license behind:
+Move the `doc-restructure` folder into place, leaving the README and the license behind:
 
 ```bash
 cp -r doc-restructure ~/.claude/skills/

@@ -1,12 +1,10 @@
 # Restructure a Markdown documentation page with Claude Code
 
-`doc-restructure` is a Claude Code skill that takes one Markdown page that's factually fine but hard to read, and rebuilds it to a known form: one shared sample fixture, which is the sample data every example on the page runs against; a lookup table covering everything the page teaches; prose saying which call to reach for; and body sections whose headings carry a claim rather than a label. Content moves rather than disappearing: every fact, example, and link is rehomed, and the closing report names where each one went. The skill doesn't fill in material the page is missing, because the complaint it answers is how the page reads.
-
-One kind of material does come out rather than move. An example that states an outcome it never runs is an assertion, and the rules the skill obeys require a demonstration instead. Invented output is either replaced by output from a real run or taken out, and the report says which.
+`doc-restructure` is a Claude Code skill that rebuilds a Markdown page that's accurate but hard to read. It moves content rather than deleting it, and its closing report says where each fact, example, and link went. The one exception is an example with invented output: the skill replaces it with output from a real run or removes it, and says which.
 
 ## Know which file settles a question
 
-Everything the skill needs sits inside `doc-restructure/`, and the two files above it are packaging:
+The skill is the `doc-restructure` folder. The README and license beside it are packaging:
 
 ```text
 claude-code-completely-restructure-your-doc/
@@ -20,45 +18,51 @@ claude-code-completely-restructure-your-doc/
         └── exemplar-shell.md
 ```
 
-`SKILL.md` carries the procedure and holds no writing rules of its own: analyze, interview, diagnose against a list of standard defects, edit in place, verify, and report. Every rule about how the prose should read is in `references/house-style.md`, which is the only place any of them lives. Where the house style leaves something ambiguous, an exemplar settles it, since each one is a finished page written to those rules rather than a description of them. Where `SKILL.md` and the house style disagree, the house style wins.
+`SKILL.md` is the procedure. `references/house-style.md` holds every writing rule, and it wins where the two disagree. The two exemplars are finished pages written to those rules, one Python and one shell, and the skill reads whichever matches your material to settle anything the rules leave open. They come from a larger Obsidian set, so their wiki links point at pages this package doesn't ship.
 
 ## Copy one directory to install it
 
-Copy the `doc-restructure` folder into place, leaving the README and the license behind:
+Clone the repo and copy the `doc-restructure` folder into `~/.claude/skills`, which makes the skill available in every project:
 
 ```bash
+git clone https://github.com/JoshGo6/claude-code-completely-restructure-your-doc.git
+cd claude-code-completely-restructure-your-doc
+mkdir -p ~/.claude/skills
 cp -r doc-restructure ~/.claude/skills/
 ```
 
-For one project alone, copy the same directory into `.claude/skills/` at the root of that project instead. Nothing else needs registering, because Claude Code picks a skill up from the directory and fires it from the description in its frontmatter.
+Don't skip the `mkdir`. If `~/.claude/skills` doesn't exist yet, `cp` creates it as a copy of `doc-restructure`, and the skill's files land directly in `~/.claude/skills` instead of in a folder of their own.
+
+To install it in one project only, copy the folder into `.claude/skills` at that project's root instead:
+
+```bash
+mkdir -p /path/to/project/.claude/skills
+cp -r doc-restructure /path/to/project/.claude/skills/
+```
+
+There's nothing to register. Claude Code finds the skill in its folder and fires it from the description in `SKILL.md`.
 
 > [!WARNING]
-> A `doc-restructure` skill you already have collides with this one, and the two installs collide differently. Copying over an existing skill directory overwrites the files inside it that share a name. Installing into a project while a user-level copy of that name exists fails more quietly: the user-level copy wins, and the project copy never appears in the session's skills listing, so nothing tells you the wrong one fired. Move the existing skill aside first, or install this one under another directory name.
+> Move any existing `doc-restructure` skill aside before you install. Copying over it overwrites the files that share a name. In a project, a user-level skill of the same name wins without any error, and the project copy never appears in the session's skills listing.
 
 ## Expect an analysis before any edit
 
-Ask for the skill by name, or describe the problem in the words its description already matches, such as *this page is confusing*, *too much is in callouts*, or *merge these two sections*. A request that fires it looks like this:
+Name the skill, or describe the problem in words like *this page is confusing* or *merge these two sections*:
 
 ```text
 Restructure ~/notes/Globbing.md. It's hard to follow and I keep losing the bigger picture.
 ```
 
-The first turn is an analysis rather than an edited file. It names what is structurally wrong, what the skill would change in order of leverage, where it disagrees with your diagnosis, and the defect you didn't raise. Questions follow, since restructuring is the job the skill's rules set to the most questions, and the turn ends there. Only once you've answered does the skill edit, in place and one region at a time, closing with a change list that says what moved where and what stayed byte-identical. Expect several rounds, each one after the first a small, targeted diff.
+The first turn is an analysis and a set of questions, not an edit. Once you've answered, the skill edits the page in place, one region at a time, and closes with a list of what moved where. Expect several rounds.
 
 ## Write for the flavor the page already uses
 
-The skill handles Obsidian, GitHub Flavored Markdown, and CommonMark, and it reads the page before it asks you anything. A page carrying neither a wiki link nor a callout gets CommonMark and no question at all, since it has expressed no preference worth preserving. A page already using one of the two flavors gets a single question, which is whether to keep that flavor or convert to CommonMark. A page mixing both gets the four-way form of the same question: Obsidian, GFM, both, or CommonMark.
-
-Two things differ by flavor, and the house style carries the form each one takes. Links are `[[Page]]` and `[[#Heading]]` in Obsidian, and `[Page](page.md)` and `[Heading](#heading)` in the other two. Callouts differ three ways: Obsidian's typed blocks take a title on the header line; GitHub's five uppercase alert types — `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]` — have no title slot at all, so what the title would have said moves into the body's first sentence; and CommonMark, which has no callout syntax whatever, takes a blockquote whose first line is the title in bold. Where Obsidian folds a callout to recap a fixture without repasting it, the other two get a `<details>` block doing the same job.
-
-## Read the exemplars as real pages
-
-The two exemplars are real reference pages lifted from a larger Obsidian set, one Python and one shell, so their wiki links point at pages this package doesn't ship. Leave them. Stripping them would show a page shape the skill doesn't actually produce, and the links are part of what each exemplar demonstrates. The skill reads whichever one matches your material, so a page about `curl` is checked against the shell exemplar.
+The skill writes Obsidian, GitHub Flavored Markdown (GFM), or CommonMark, and it checks the page before asking. A page with no wiki links or callouts gets CommonMark and no question. A page that already uses Obsidian or GFM syntax, or a mix of both, gets one question about which flavor to write. The choice affects only links and callouts, and the house style gives the form each flavor takes.
 
 ## Watch the recorded walkthrough
 
-A recording of the skill running against a real page is at [joshgoldstein.org/claude-skills.html](https://www.joshgoldstein.org/claude-skills.html), which carries a short highlight first and the full run after it. Josh Goldstein wrote the skill and the house style it obeys, with Claude Code as the coding agent working under his direction.
+A recording of the skill running on a real page is at [joshgoldstein.org/claude-skills.html](https://www.joshgoldstein.org/claude-skills.html). Josh Goldstein wrote the skill and its house style, with Claude Code as the coding agent working under his direction.
 
 ## Use it under the MIT license
 
-The license is MIT and its text is in `LICENSE`. Copy the skill, change it, or ship it inside something else, as long as the copyright notice travels with it.
+The full license text is in `LICENSE`.
